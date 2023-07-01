@@ -7,7 +7,8 @@ const app = express();
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended : true}));
-const md5 = require('md5')
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 require('dotenv').config()
 
@@ -32,7 +33,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Cryptage du mot de passe
-
 const User = new mongoose.model("User", userSchema);
 
 // ROUTES
@@ -47,13 +47,16 @@ app.get('/register', function(_, res){
 })
 
 app.post("/register", function (req, res) {
-    const newUser = new User({
-        email: req.body.username,
-        password: md5(req.body.password)
+    bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+        // Store hash in your password DB.
+        const newUser = new User({
+            email: req.body.username,
+            password: hash
+        });
+    
+        newUser.save(console.log(`Compte ${newUser.email} crée avec succès`))
+        res.render("secrets")
     });
-
-    newUser.save(console.log(`Compte ${newUser.email} crée avec succès`))
-    res.render("secrets")
 
   });
 app.post("/login", function(req, res){
@@ -63,10 +66,12 @@ app.post("/login", function(req, res){
   User.findOne({email: username})
   .then(foundUser => {
     if(foundUser){
-      if(foundUser.password === password){
-        console.log(`Connexion au compte de ${username} réussi`);
-        res.render("secrets")
-      }
+        bcrypt.compare(password, foundUser.password, function(err, result) {
+            if(result === true){
+                console.log(`Connexion au compte de ${username} réussi`);
+                res.render("secrets")
+            }
+        });
     }
   })
   .catch(err => {
