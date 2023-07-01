@@ -3,11 +3,11 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const ejs = require('ejs');
 const mongoose = require('mongoose')
-const encrypt = require('mongoose-encryption');
 const app = express();
 app.use(express.static('public'));
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended : true}));
+const md5 = require('md5')
 
 require('dotenv').config()
 
@@ -32,7 +32,6 @@ const userSchema = new mongoose.Schema({
 });
 
 // Cryptage du mot de passe
-userSchema.plugin(encrypt, { secret: process.env.SECRET, encryptedFields: ['password'] });
 
 const User = new mongoose.model("User", userSchema);
 
@@ -50,7 +49,7 @@ app.get('/register', function(_, res){
 app.post("/register", function (req, res) {
     const newUser = new User({
         email: req.body.username,
-        password: req.body.password
+        password: md5(req.body.password)
     });
 
     newUser.save(console.log(`Compte ${newUser.email} crée avec succès`))
@@ -75,6 +74,7 @@ app.post("/login", function(req, res){
   });
 
 })
+
 // PORT
 const PORT = process.env.PORT || 8080;
 
