@@ -56,14 +56,6 @@ app.post("/register", function (req, res) {
     newUser.save(console.log(`Compte ${newUser.email} crée avec succès`))
     res.render("secrets")
 
-    // newUser.save(function(err){
-    //     if(err){
-    //       console.log(err)
-    //     } else{
-    //       return res.send("secrets")    
-    //     }
-    // })
-
   });
 app.post("/login", function(req, res){
   const username = req.body.username;
